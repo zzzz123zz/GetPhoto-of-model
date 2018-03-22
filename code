@@ -1,0 +1,89 @@
+
+import urllib.request,re
+import json
+import os
+import re
+from multiprocessing import Pool
+
+#####根据图片ID下载图片，并保存到指定路径
+def GetPhoto(path,id,girl):
+    girlmessageurl='https://mm.taobao.com/self/aiShow.htm?spm=719.7763510.1998643336.2.HC43QM&userId='+id
+    response=urllib.request.urlopen(girlmessageurl)
+    texthtml=response.read().decode('gbk')
+    #print(texthtml)
+    #获取女孩信息，并进行存储'userId' (859049713592)
+
+    with open('GIRLS/0.txt','a') as f:
+        #f.write('姓名：'+girl['realName']+',ID:'+girl['userid']+',城市：'+girl['city']+',身高：'+girl['height']+',体重：'+girl['weight']+',QQ:'+qq+',weixin:'+weixin+',tele:'+tele)
+        f.write('姓名：' + girl['realName'] + ',ID:' + str(girl['userId']) + ',城市：' + girl['city'] + ',身高：' + girl['height'] + ',体重：' + girl['weight'] + '\r\n')
+
+    photos=re.findall(r'src="//(.*?)"/>',texthtml)
+    i=1
+    for photo in photos:
+        #urllib.request.urlretrieve('http://img.alicdn.com/imgextra/i1/176817195/TB1a4uZHXXXXXbaXpXXXXXXXXXX_!!176817195-0-tstar.jpg','1.jpg')
+        try:
+            urllib.request.urlretrieve('http://'+photo,path+'/'+str(i)+'.jpg')
+            print('正在下载美女（'+girl['realName']+') 的第  '+str(i)+' 张美图')
+            i=i+1
+        except:
+            print('图片下载失败')
+    return i
+
+
+def main():
+    x = input('请输入需要爬取的美女页数:')
+
+    # firsturl="https://mm.taobao.com/search_tstar_model.htm?spm=5679.126488.640745.2.1b545b81TqOPsC"
+    firsturl = "https://mm.taobao.com/tstar/search/tstar_model.do?_input_charset=utf-8"
+
+    # 采取动态POST请求的方式请求美女列表
+    send_data = {}
+    send_data['q'] = r''
+    send_data['viewFlag'] = r'A'
+    send_data['sortType'] = r'default'
+    send_data['searchStyle'] = r''
+    send_data['searchRegion'] = r'city:'
+    send_data['searchFansNum'] = r''
+    send_data['currentPage'] = str(x)
+    send_data['pageSize'] = r'100'
+    # 必须对原始请求数据进行编码（作者在此处遇到了很大的麻烦）
+    data1 = urllib.parse.urlencode(send_data)
+    data1 = data1.encode('gbk')
+    # 创建POST请求
+    request = urllib.request.Request(url=firsturl, data=data1)
+    # 发送请求获取服务器内容，即美女们的列表
+    response = urllib.request.urlopen(request)
+    text_obj = response.read().decode('gbk')
+    # 返回的数据为JSon格式，但是初始为txt，使用JSon模块转换为json
+    json_obj = json.loads(text_obj)
+    # 获取json中的美奴主页地址列表
+    girls = json_obj['data']['searchDOList']
+    # 创建计数器，计算总共爬取多少位美女
+    photocount = 0
+    # 创建美女图片存储路径
+    if not os.path.exists('GIRLS'):  # 判断GIRLS文件夹是否存在
+        os.mkdir('GIRLS')
+    for girl in girls:
+        # 为每一个美女创建属于自己的文件夹
+        temp = 'GIRLS/' + girl['realName']
+        if not os.path.exists(temp):
+            os.mkdir(temp)
+        # 下载美女主页内的所有美女图片
+        photocount = photocount + GetPhoto(temp, str(girl['userId']), girl)
+        # break
+    print('下载完成,美女：' + str(len(girls)) + '人,美图：' + str(photocount) + '张')
+
+if __name__=='__main__':
+    ##print('主函数')
+    #pool=Pool(processes=3)
+    #for i in range(1,3):
+    #    pool.apply_async(main,(i,))
+    #    print(str(i)+'  个进程加入')
+    #print('kaishi')
+    #pool.close()
+    #pool.join()
+    main()
+
+
+
+
