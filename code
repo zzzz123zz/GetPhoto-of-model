@@ -37,6 +37,7 @@ def main():
     firsturl = "https://mm.taobao.com/tstar/search/tstar_model.do?_input_charset=utf-8"
 
     # 采取动态POST请求的方式请求美女列表
+    #构建请求的数据结构及属性，该信息通过抓包获取
     send_data = {}
     send_data['q'] = r''
     send_data['viewFlag'] = r'A'
@@ -83,7 +84,4 @@ if __name__=='__main__':
     #pool.close()
     #pool.join()
     main()
-
-
-
 
